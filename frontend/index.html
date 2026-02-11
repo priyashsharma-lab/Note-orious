@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Note-orious</title>
+
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    header img {
+      height: 150px;
+      width: 150px;
+      object-fit: contain;
+    }
+
+    header h1 {
+      font-size: 36px;
+      margin: 0;
+      position: relative;
+      right: 30px;
+      color: #333333;
+    }
+
+    header span {
+      color: #667eea;
+    }
+
+    .tagline {
+      text-align: center;
+      color: #666666;
+      margin-bottom: 30px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      background: #667eea;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #5563d6;
+    }
+
+    select, input[type="file"], input[type="number"] {
+      padding: 8px;
+      font-size: 14px;
+    }
+
+    #status {
+      text-align: center;
+      font-weight: bold;
+      margin: 10px 0 20px 0;
+    }
+
+    .quiz-item {
+      background: #f5f6fa;
+      padding: 14px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+
+    .answer {
+      display: none;
+      margin-top: 8px;
+      color: green;
+      font-weight: bold;
+    }
+
+    .flashcards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .card {
+      background: #667eea;
+      color: white;
+      border-radius: 12px;
+      padding: 18px;
+      min-height: 120px;
+      cursor: pointer;
+    }
+
+    .card .back {
+      display: none;
+    }
+
+    .card.flipped .front {
+      display: none;
+    }
+
+    .card.flipped .back {
+      display: block;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #777777;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <header>
+      <img src="logo.png" alt="Note-orious Logo" />
+      <h1>Note-<span>orious</span></h1>
+    </header>
+
+    <div class="tagline">
+      Turn your notes into quizzes and flashcards in seconds 🚀
+    </div>
+
+    <div class="controls">
+      <input type="file" id="fileInput" accept="application/pdf" />
+
+      <select id="quizType">
+        <option value="descriptive">Descriptive Quiz</option>
+        <option value="mcq">MCQ Quiz</option>
+      </select>
+
+      <input type="number" id="numQuestions" min="1" max="50" value="10" />
+
+      <button id="generateBtn">Generate</button>
+    </div>
+
+    <p id="status"></p>
+
+    <h2>📝 Quiz</h2>
+    <div id="quiz"></div>
+
+    <h2>🃏 Flashcards</h2>
+    <div id="flashcards" class="flashcards"></div>
+
+    <footer>
+      © 2026 Note-orious — Study smarter, not harder 📚
+    </footer>
+
+  </div>
+
+  <script>
+    var generateButton = document.getElementById("generateBtn");
+    generateButton.addEventListener("click", uploadPDF);
+
+    async function uploadPDF() {
+      var fileInput = document.getElementById("fileInput");
+      var quizTypeSelect = document.getElementById("quizType");
+      var numQuestionsInput = document.getElementById("numQuestions");
+
+      var quizType = quizTypeSelect.value;
+      var numQuestions = numQuestionsInput.value;
+
+      if (fileInput.files.length === 0) {
+        alert("Please select a PDF file");
+        return;
+      }
+
+      var formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+      formData.append("quizType", quizType);
+      formData.append("numQuestions", numQuestions);
+
+      var statusEl = document.getElementById("status");
+      statusEl.innerText = "Generating... ⏳";
+
+      try {
+        var response = await fetch("http://localhost:5000/upload", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) {
+          var errorText = await response.text();
+          console.error("Backend error:", errorText);
+          statusEl.innerText = "Error from backend ❌";
+          return;
+        }
+
+        var data = await response.json();
+        statusEl.innerText = "Done! ✅";
+
+        // Render Quiz
+        var quizDiv = document.getElementById("quiz");
+        quizDiv.innerHTML = "";
+
+        for (var i = 0; i < data.quiz.length; i++) {
+          var q = data.quiz[i];
+
+          var div = document.createElement("div");
+          div.className = "quiz-item";
+
+          var html = "<b>" + (i + 1) + ". " + q.question + "</b>";
+
+          if (q.options) {
+            html = html + "<ul>";
+            for (var j = 0; j < q.options.length; j++) {
+              html = html + "<li>" + q.options[j] + "</li>";
+            }
+            html = html + "</ul>";
+          }
+
+          html = html + "<button>Show Answer</button>";
+          html = html + "<div class='answer'>" + q.answer + "</div>";
+
+          div.innerHTML = html;
+
+          var button = div.querySelector("button");
+          var answerDiv = div.querySelector(".answer");
+
+          button.addEventListener("click", function () {
+            if (answerDiv.style.display === "none" || answerDiv.style.display === "") {
+              answerDiv.style.display = "block";
+              this.innerText = "Hide Answer";
+            } else {
+              answerDiv.style.display = "none";
+              this.innerText = "Show Answer";
+            }
+          });
+
+          quizDiv.appendChild(div);
+        }
+
+        // Render Flashcards
+        var flashDiv = document.getElementById("flashcards");
+        flashDiv.innerHTML = "";
+
+        for (var k = 0; k < data.flashcards.length; k++) {
+          var card = data.flashcards[k];
+
+          var cardDiv = document.createElement("div");
+          cardDiv.className = "card";
+
+          cardDiv.innerHTML =
+            "<div class='front'><b>" + card.front + "</b></div>" +
+            "<div class='back'>" + card.back + "</div>";
+
+          cardDiv.addEventListener("click", function () {
+            this.classList.toggle("flipped");
+          });
+
+          flashDiv.appendChild(cardDiv);
+        }
+
+      } catch (err) {
+        console.error("Frontend error:", err);
+        statusEl.innerText = "Request failed ❌";
+      }
+    }
+  </script>
+
+</body>
+</html>
