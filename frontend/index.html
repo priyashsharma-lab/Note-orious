@@ -180,6 +180,18 @@
     var generateButton = document.getElementById("generateBtn");
     generateButton.addEventListener("click", uploadPDF);
 
+    function addToggleHandler(button, answerDiv) {
+      button.addEventListener("click", function () {
+        if (answerDiv.style.display === "none" || answerDiv.style.display === "") {
+          answerDiv.style.display = "block";
+          button.innerText = "Hide Answer";
+        } else {
+          answerDiv.style.display = "none";
+          button.innerText = "Show Answer";
+        }
+      });
+    }
+
     async function uploadPDF() {
       var fileInput = document.getElementById("fileInput");
       var quizTypeSelect = document.getElementById("quizType");
@@ -245,15 +257,7 @@
           var button = div.querySelector("button");
           var answerDiv = div.querySelector(".answer");
 
-          button.addEventListener("click", function () {
-            if (answerDiv.style.display === "none" || answerDiv.style.display === "") {
-              answerDiv.style.display = "block";
-              this.innerText = "Hide Answer";
-            } else {
-              answerDiv.style.display = "none";
-              this.innerText = "Show Answer";
-            }
-          });
+          addToggleHandler(button, answerDiv);
 
           quizDiv.appendChild(div);
         }
