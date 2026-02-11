@@ -21,7 +21,8 @@ pdfjsLib.GlobalWorkerOptions.standardFontDataUrl =
   "https://unpkg.com/pdfjs-dist@5.4.624/standard_fonts/";
 
 // 🔑 PUT YOUR OPENROUTER API KEY HERE
-const OPENROUTER_API_KEY = "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";
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+
 
 // Model name
 const MODEL = "mistralai/mistral-7b-instruct";
