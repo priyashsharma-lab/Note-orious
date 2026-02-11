@@ -202,7 +202,7 @@
       statusEl.innerText = "Generating... ⏳";
 
       try {
-        var response = await fetch("http://localhost:5000/upload", {
+        var response = await fetch("https://note-orious-backend.onrender.com/", {
           method: "POST",
           body: formData
         });
