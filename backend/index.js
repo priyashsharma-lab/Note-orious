@@ -25,7 +25,7 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 
 // Model name
-const MODEL = "mistralai/mistral-7b-instruct";
+const MODEL = "meta-llama/llama-3-8b-instruct:free";
 
 // Main API route
 app.post("/upload", upload.single("file"), async (req, res) => {
